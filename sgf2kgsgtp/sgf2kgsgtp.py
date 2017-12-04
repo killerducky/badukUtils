@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-# cd /home/aolsen/projects/sgf2kgsgtp
+# cd /home/aolsen/projects/badukUtils/sgf2kgsgtp
 # ./sgf2kgsgtp.py LeelaZeroA.cfg /home/aolsen/projects/leela-zero-utils/leela-zero/autogtp/save
 # ./sgf2kgsgtp.py LeelaZeroB.cfg /home/aolsen/projects/leela-zero-utils/leela-zero/autogtp/save
 
@@ -50,6 +50,7 @@ class KgsGtp:
             "kgs-genmove_cleanup",
             "kgs-time_settings",
             "kgs-game_over",
+            #"kgs-chat",
             "heatmap"
         )
         self.responses["name"] = "LeelaZero -- This robot relays Leela Zero self play games to KGS. See my info or http://zero.sjeng.org"
@@ -63,13 +64,9 @@ class KgsGtp:
         self.responses["kgs-time_settings"] = ""
         self.responses["play"] = ""
         self.responses["time_left"] = ""
-        # See code for these
-        # kgs-game_over
-        # final_status_list
-        # genmove
         self.moves = []
         self.movenum = 0
-        self.kgsGtpCmd = "java -jar ../kgsGtp-3.5.22/kgsGtp.jar %s" % (self.cfgfile)
+        self.kgsGtpCmd = "java -jar ../../kgsGtp-3.5.22/kgsGtp.jar %s" % (self.cfgfile)
 
     def openKgsGtpProc(self):
         self.kgsGtpProc = subprocess.Popen(self.kgsGtpCmd.split(), stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
@@ -142,6 +139,8 @@ class KgsGtp:
             elif cmdarray[0] == "kgs-game_over":
                 self.game_over()
                 self.send2kgsGtp("=\n")
+            elif cmdarray[0] == "kgs-chat":
+                self.send2kgsGtp("= Testing kgs-chat command\n")
             elif cmdarray[0] in self.responses.keys():
                 response = self.responses[cmdarray[0]]
                 self.send2kgsGtp("= ")

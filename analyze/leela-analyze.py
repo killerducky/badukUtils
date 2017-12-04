@@ -7,15 +7,16 @@ import subprocess
 import time
 import re
 
-
 class Eval:
-    def __init__(self, weights):
+    def __init__(self, label, leelaz_path, weights):
+        self.label = label
+        self.leelaz_path = leelaz_path
         self.weights  = weights
         self.playouts = 1000
-        #leelaz_cmd = "leelaz -d -w ../networks/%s.txt -p %d --noponder -r 0" % (self.weights, self.playouts)
-        leelaz_cmd = "/home/aolsen/projects/leela-zero-utils/leela-zero/src/leelaz -d -w ../networks/%s.txt -p %d --noponder -r 0" % (self.weights, self.playouts)
-        #leelaz_cmd += " -n -m 30"   # noise, more random first 30 moves
-        self.leela = subprocess.Popen(leelaz_cmd.split(), stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+        self.leelaz_cmd = "%s -d -w /home/aolsen/networks/%s.txt -p %d --noponder -r 0" % (self.leelaz_path, self.weights, self.playouts)
+        #self.leelaz_cmd += " -n -m 30"   # noise, more random first 30 moves
+        self.leelaz_cmd += " -t 1"   # single thread
+        self.leela = subprocess.Popen(self.leelaz_cmd.split(), stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
         while 1:
             self.leela.stdout.flush()
             line = self.leela.stdout.readline()
@@ -37,7 +38,8 @@ class Eval:
 
     def evalposition(self, sgffile, movenum):
         self.cmds = []
-        self.fh = open("logs/evallog-%s-%d-%s-%d.txt" % (sgffile, movenum, self.weights, self.playouts), "w")
+        self.fh = open("logs/evallog_%s_%d_%s_%s_%d.txt" % (sgffile, movenum, self.label, self.weights, self.playouts), "w")
+        self.log("leelaz_cmd=%s\n" % (self.leelaz_cmd))
         self.log("evalposition %s %d\n" % (sgffile, movenum))
         self.sendcmd("loadsgf sgfs/%s %d" % (sgffile, movenum))
         self.sendcmd("heatmap")
@@ -54,23 +56,30 @@ class Eval:
                 self.log(line)
                 if re.search("^White time", line): break
         self.fh.close()
+        self.leela.kill()
     
 
 def main():
+    leelaz_paths = {}
+    leelaz_paths["default"] = "/home/aolsen/projects/leela-zero-utils/leela-zero/src/leelaz"
+    leelaz_paths["cpuct"]   = "/home/aolsen/projects/test_first_move_and_puct/leela-zero/src/leelaz"
+    positions = []
+    positions.append(("cap2.sgf", 1))
+    #positions.append(("cap2.sgf", 612)
+    #positions.append(("not_suicide.sgf", 430))   # White T1, black kills
+    #positions.append(("kill.sgf", 351))   # White T1, black kills
+    #positions.append(("fill_2nd_eye.sgf", 412))
+    #positions.append(("cap_to_connect_tail.sgf", 422))
+
     #for weights in ("0k", "9k", "19k", "62k"):
     #for weights in ("137k", "human_best_v1"):
-    for weights in ("292k",):
-        eval = Eval(weights)
-        #eval.evalposition("cap2.sgf", 612)
-        #eval.evalposition("cap2.sgf", 1)
-        #eval.evalposition("kill.sgf", 351)   # White T1, black kills
-        #eval.evalposition("fill_2nd_eye.sgf", 412)
-        #eval.evalposition("cap_to_connect_tail.sgf", 422)
-        eval.playouts = 1000
-        eval.evalposition("not_suicide.sgf", 430)   # White T1, black kills
-        eval.playouts = 1600
-        eval.evalposition("not_suicide.sgf", 430)   # White T1, black kills
-        eval.playouts = 5000
-        eval.evalposition("not_suicide.sgf", 430)   # White T1, black kills
+    for label in ("default", "cpuct"):
+        for weights in ("292k",):
+            #for playouts in (625, 1000, 1600):
+            for playouts in (1000,):
+                for position in (positions):
+                    eval = Eval(label, leelaz_paths[label], weights)
+                    eval.playouts = playouts
+                    eval.evalposition(position[0], position[1])
 
 if __name__ == "__main__": main()
