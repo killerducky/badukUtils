@@ -36,12 +36,20 @@ class Eval:
         self.fh.write(line)
         print line,
 
-    def evalposition(self, sgffile, movenum):
+    def evalposition(self, sgffile, movenum, passHack):
         self.cmds = []
         self.fh = open("logs/evallog_%s_%d_%s_%s_%d.txt" % (sgffile, movenum, self.label, self.weights, self.playouts), "w")
         self.log("leelaz_cmd=%s\n" % (self.leelaz_cmd))
         self.log("evalposition %s %d\n" % (sgffile, movenum))
-        self.sendcmd("loadsgf sgfs/%s %d" % (sgffile, movenum))
+        # Workaround a bug in leelaz loadsgf and passes
+        # TODO: debug root cause
+        if passHack:
+            self.sendcmd("play b q16")
+            self.sendcmd("play w d4")
+            self.sendcmd("play b pass")
+            movenum = 4
+        else:
+            self.sendcmd("loadsgf sgfs/%s %d" % (sgffile, movenum))
         self.sendcmd("heatmap")
         self.sendcmd("genmove %s" % (self.colortomove(movenum)))
         self.sendcmd("heatmap")
@@ -64,22 +72,23 @@ def main():
     leelaz_paths["default"] = "/home/aolsen/projects/leela-zero-utils/leela-zero/src/leelaz"
     leelaz_paths["cpuct"]   = "/home/aolsen/projects/test_first_move_and_puct/leela-zero/src/leelaz"
     positions = []
-    positions.append(("cap2.sgf", 1))
+    #positions.append(("opening.sgf", 1))
+    positions.append(("early_pass.sgf", 4, True))
     #positions.append(("cap2.sgf", 612)
     #positions.append(("not_suicide.sgf", 430))   # White T1, black kills
     #positions.append(("kill.sgf", 351))   # White T1, black kills
     #positions.append(("fill_2nd_eye.sgf", 412))
     #positions.append(("cap_to_connect_tail.sgf", 422))
 
-    #for weights in ("0k", "9k", "19k", "62k"):
-    #for weights in ("137k", "human_best_v1"):
     for label in ("default", "cpuct"):
-        for weights in ("292k",):
+        #for weights in ("0k", "9k", "19k", "62k", "292k"):
+        #for weights in ("137k", "human_best_v1"):
+        for weights in ("585k",):
             #for playouts in (625, 1000, 1600):
             for playouts in (1000,):
                 for position in (positions):
                     eval = Eval(label, leelaz_paths[label], weights)
                     eval.playouts = playouts
-                    eval.evalposition(position[0], position[1])
+                    eval.evalposition(position[0], position[1], position[2])
 
 if __name__ == "__main__": main()
