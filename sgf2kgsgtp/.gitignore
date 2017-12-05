@@ -1,1 +1,3 @@
 *.cfg
+*.log
+*.log.lck

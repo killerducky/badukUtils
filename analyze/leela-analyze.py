@@ -8,11 +8,11 @@ import time
 import re
 
 class Eval:
-    def __init__(self, label, leelaz_path, weights):
+    def __init__(self, label, leelaz_path, weights, playouts):
         self.label = label
         self.leelaz_path = leelaz_path
         self.weights  = weights
-        self.playouts = 1000
+        self.playouts = playouts
         self.leelaz_cmd = "%s -d -w /home/aolsen/networks/%s.txt -p %d --noponder -r 0" % (self.leelaz_path, self.weights, self.playouts)
         #self.leelaz_cmd += " -n -m 30"   # noise, more random first 30 moves
         self.leelaz_cmd += " -t 1"   # single thread
@@ -36,20 +36,12 @@ class Eval:
         self.fh.write(line)
         print line,
 
-    def evalposition(self, sgffile, movenum, passHack):
+    def evalposition(self, sgffile, movenum):
         self.cmds = []
-        self.fh = open("logs/evallog_%s_%d_%s_%s_%d.txt" % (sgffile, movenum, self.label, self.weights, self.playouts), "w")
+        self.fh = open("logs/evallog_%s_%d_%s_%s_%05d.txt" % (sgffile, movenum, self.label, self.weights, self.playouts), "w")
         self.log("leelaz_cmd=%s\n" % (self.leelaz_cmd))
         self.log("evalposition %s %d\n" % (sgffile, movenum))
-        # Workaround a bug in leelaz loadsgf and passes
-        # TODO: debug root cause
-        if passHack:
-            self.sendcmd("play b q16")
-            self.sendcmd("play w d4")
-            self.sendcmd("play b pass")
-            movenum = 4
-        else:
-            self.sendcmd("loadsgf sgfs/%s %d" % (sgffile, movenum))
+        self.sendcmd("loadsgf sgfs/%s %d" % (sgffile, movenum))
         self.sendcmd("heatmap")
         self.sendcmd("genmove %s" % (self.colortomove(movenum)))
         self.sendcmd("heatmap")
@@ -71,9 +63,11 @@ def main():
     leelaz_paths = {}
     leelaz_paths["default"] = "/home/aolsen/projects/leela-zero-utils/leela-zero/src/leelaz"
     leelaz_paths["cpuct"]   = "/home/aolsen/projects/test_first_move_and_puct/leela-zero/src/leelaz"
+    leelaz_paths["resign"]   = "/home/aolsen/projects/test_resign/leela-zero/src/leelaz"
+    leelaz_paths["next"]   = "/home/aolsen/projects/leela-zero-next/leela-zero/src/leelaz"
     positions = []
     #positions.append(("opening.sgf", 1))
-    positions.append(("early_pass.sgf", 4, True))
+    positions.append(("early_pass.sgf", 4))
     #positions.append(("cap2.sgf", 612)
     #positions.append(("not_suicide.sgf", 430))   # White T1, black kills
     #positions.append(("kill.sgf", 351))   # White T1, black kills
@@ -84,11 +78,10 @@ def main():
         #for weights in ("0k", "9k", "19k", "62k", "292k"):
         #for weights in ("137k", "human_best_v1"):
         for weights in ("585k",):
-            #for playouts in (625, 1000, 1600):
+            #for playouts in (50, 100, 360, 500, 625, 1000, 1600, 5000, 10000):
             for playouts in (1000,):
-                for position in (positions):
-                    eval = Eval(label, leelaz_paths[label], weights)
-                    eval.playouts = playouts
-                    eval.evalposition(position[0], position[1], position[2])
+                for (position, movenum) in (positions):
+                    eval = Eval(label, leelaz_paths[label], weights, playouts)
+                    eval.evalposition(position, movenum)
 
 if __name__ == "__main__": main()
