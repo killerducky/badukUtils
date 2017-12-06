@@ -67,14 +67,14 @@ def main():
     leelaz_paths["next"]   = "/home/aolsen/projects/leela-zero-next/leela-zero/src/leelaz"
     positions = []
     #positions.append(("opening.sgf", 1))
-    positions.append(("early_pass.sgf", 4))
-    #positions.append(("cap2.sgf", 612)
+    #positions.append(("early_pass.sgf", 4))
+    #positions.append(("cap2.sgf", 612))
     #positions.append(("not_suicide.sgf", 430))   # White T1, black kills
     #positions.append(("kill.sgf", 351))   # White T1, black kills
     #positions.append(("fill_2nd_eye.sgf", 412))
-    #positions.append(("cap_to_connect_tail.sgf", 422))
+    positions.append(("cap_to_connect_tail.sgf", 422))
 
-    for label in ("default", "cpuct"):
+    for label in ("default", "next"):
         #for weights in ("0k", "9k", "19k", "62k", "292k"):
         #for weights in ("137k", "human_best_v1"):
         for weights in ("585k",):

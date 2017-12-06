@@ -24,7 +24,7 @@ class KgsGtp:
         self.boardsize = 19  # Could get this from GTP but this is easier
         self.maxmoves  = self.boardsize*self.boardsize*2
         self.responses = {}
-        self.responses["list_commands"] = (
+        self.responses["list_commands"] = [
             "protocol_version",
             "name",
             "version",
@@ -52,7 +52,9 @@ class KgsGtp:
             "kgs-game_over",
             #"kgs-chat",
             "heatmap"
-        )
+        ]
+        #if (cfgfile == "LeelaZeroA.cfg"):
+        #    self.responses["list_commands"].append("kgs-chat")
         self.responses["name"] = "LeelaZero -- This robot relays Leela Zero self play games to KGS. See my info or http://zero.sjeng.org"
         self.responses["version"] = "0.6"
         # Throw these away
@@ -67,6 +69,8 @@ class KgsGtp:
         self.moves = []
         self.movenum = 0
         self.kgsGtpCmd = "java -jar ../../kgsGtp-3.5.22/kgsGtp.jar %s" % (self.cfgfile)
+        self.winner = None
+        self.score = None
 
     def openKgsGtpProc(self):
         self.kgsGtpProc = subprocess.Popen(self.kgsGtpCmd.split(), stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
@@ -83,17 +87,19 @@ class KgsGtp:
     def getNextMove(self, mycolor):
         self.moveSleep()
         self.mycolor = mycolor
-        print "getNextMove %s" % self.mycolor
         if len(self.moves)==0:
             self.parseNextSgf()
-        if self.movenum > len(self.moves): 
-            return "pass" # This can happen if the game is ended by the move limit (361*2=724). Just pass
+        print "getNextMove %s self.movenum=%d len(self.moves)=%d" % (self.mycolor, self.movenum, len(self.moves))
+        if self.movenum >= len(self.moves):
+            print "out of moves, resign. self.winner=%s self.score=%s self.mycolor=%s\n" % (self.winner, self.score, self.mycolor)
+            return "resign"
         (color, move) = self.moves[self.movenum]
         self.movenum += 1
         if color != self.mycolor:
             print "opponent should have played %s %s" % (color, move)
-            if self.movenum > len(self.moves): 
-                return "pass" # This can happen if the game is ended by the move limit (361*2=724). Just pass
+            if self.movenum >= len(self.moves):
+                print "out of moves, resign. self.winner=%s self.score=%s self.mycolor=%s\n" % (self.winner, self.score, self.mycolor)
+                return "resign"
             (color, move) = self.moves[self.movenum]
             self.movenum += 1
         return move
@@ -144,7 +150,7 @@ class KgsGtp:
             elif cmdarray[0] in self.responses.keys():
                 response = self.responses[cmdarray[0]]
                 self.send2kgsGtp("= ")
-                if isinstance(response, tuple):
+                if isinstance(response, tuple) or isinstance(response, list):
                     for line in response:
                         self.send2kgsGtp("%s\n" % line)
                 else:
@@ -168,20 +174,25 @@ class KgsGtp:
         print "picked %s" % (filename)
         self.parseSgf(filename)
 
+    #
     # Example sgf:
     #(;GM[1]FF[4]RU[Chinese]DT[2017-11-22]SZ[19]KM[7.5]PB[Leela Zero 0.6 1ac2638d]PW[Human]RE[B+9.5]
     #
     #;B[po];W[nb];B[hs];W[jf];B[nq];W[af];B[nl];W[rn];B[ap];W[sr]
     # <snip>
     #;B[jn];W[df];B[jp];W[aq];B[ss];W[tt];B[tt])
+    #
+    # Example header with resign:
+    #(;GM[1]FF[4]RU[Chinese]DT[2017-12-05]SZ[19]KM[7.5]PB[Leela Zero 0.6 /home/ao]PW[Human]RE[B+Resign]
+    #
     def parseSgf(self, filename):
         self.moves = []
         self.filename = filename
         fh = open("%s/%s" % (self.queued_sgfs_dir, self.filename), "r")
         line = fh.readline()
         # KGS only asks for version once...
-        #m = re.search("PB\[Leela Zero (.*?\)\]", line)
-        #if m: responses["version"] = m.groups(1)
+        m = re.search("PB\[Leela Zero (.*?)\].*RE\[(.)\+(\S+)?\]", line)
+        (self.responses["version"], self.winner, self.score) = m.groups()
         for line in fh:
             for move in line.split(";"):
                 m = re.search("([BW])\[(..)\]", move)
@@ -191,7 +202,7 @@ class KgsGtp:
                 self.moves.append((color, move))
                 print "%s %s " % (color, move),
         fh.close()
-        
+
 def main():
     cfgfile       = sys.argv[1]
     auto_sgfs_dir = sys.argv[2]
