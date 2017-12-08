@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # cd /home/aolsen/projects/badukUtils/sgf2kgsgtp
 # ./sgf2kgsgtp.py LeelaZeroA.cfg /home/aolsen/projects/leela-zero-utils/leela-zero/autogtp/save
@@ -56,7 +56,7 @@ class KgsGtp:
         #if (cfgfile == "LeelaZeroA.cfg"):
         #    self.responses["list_commands"].append("kgs-chat")
         self.responses["name"] = "LeelaZero -- This robot relays Leela Zero self play games to KGS. See my info or http://zero.sjeng.org"
-        self.responses["version"] = "0.6"
+        self.responses["version"] = "0.8"
         # Throw these away
         self.responses["boardsize"] = ""
         self.responses["kgs-time_settings"] = ""
@@ -73,15 +73,15 @@ class KgsGtp:
         self.score = None
 
     def openKgsGtpProc(self):
-        self.kgsGtpProc = subprocess.Popen(self.kgsGtpCmd.split(), stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+        self.kgsGtpProc = subprocess.Popen(self.kgsGtpCmd.split(), stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, universal_newlines=True, bufsize=1)
 
     def send2kgsGtp(self, s):
+        print(">%s" % (s), end="")
         self.kgsGtpProc.stdin.write(s)
-        print ">%s" % (s),
 
     def readKgsGtp(self):
         s = self.kgsGtpProc.stdout.readline()
-        print "<%s" % (s),
+        print("<%s" % (s), end="")
         return s
 
     def getNextMove(self, mycolor):
@@ -89,16 +89,16 @@ class KgsGtp:
         self.mycolor = mycolor
         if len(self.moves)==0:
             self.parseNextSgf()
-        print "getNextMove %s self.movenum=%d len(self.moves)=%d" % (self.mycolor, self.movenum, len(self.moves))
+        print("getNextMove %s self.movenum=%d len(self.moves)=%d" % (self.mycolor, self.movenum, len(self.moves)))
         if self.movenum >= len(self.moves):
-            print "out of moves, resign. self.winner=%s self.score=%s self.mycolor=%s\n" % (self.winner, self.score, self.mycolor)
+            print("out of moves, resign. self.winner=%s self.score=%s self.mycolor=%s\n" % (self.winner, self.score, self.mycolor))
             return "resign"
         (color, move) = self.moves[self.movenum]
         self.movenum += 1
         if color != self.mycolor:
-            print "opponent should have played %s %s" % (color, move)
+            print("opponent should have played %s %s" % (color, move))
             if self.movenum >= len(self.moves):
-                print "out of moves, resign. self.winner=%s self.score=%s self.mycolor=%s\n" % (self.winner, self.score, self.mycolor)
+                print("out of moves, resign. self.winner=%s self.score=%s self.mycolor=%s\n" % (self.winner, self.score, self.mycolor))
                 return "resign"
             (color, move) = self.moves[self.movenum]
             self.movenum += 1
@@ -108,7 +108,7 @@ class KgsGtp:
         oldfullname = "%s/%s" % (olddir, filename)
         newfullname = "%s/%s" % (newdir, filename)
         stat = os.stat(oldfullname)
-        print "move %s to %s" % (oldfullname, newfullname)
+        print("move %s to %s" % (oldfullname, newfullname))
         os.rename(oldfullname, newfullname)
         os.utime(newfullname, (stat.st_atime, stat.st_mtime))
 
@@ -125,11 +125,11 @@ class KgsGtp:
 
     def moveSleep(self):
         # Start speeding up halfway through the max = 361 moves
-        scale = 1.0 * (self.movenum - self.maxmoves/2.0) / (self.boardsize*2)
+        scale = 1.0 * (self.movenum - (self.maxmoves/2.0 - self.boardsize)) / self.boardsize
         scale = min(1.0, scale)
         scale = max(0.0, scale)
         t = (1.0-scale)*self.move_sleep_early + scale*self.move_sleep_late
-        print "movenum=%d sleep=%0.1f" % (self.movenum, t)
+        print("movenum=%d sleep=%0.1f" % (self.movenum, t))
         time.sleep(t)
 
     def kgsGtpLoop(self):
@@ -171,7 +171,7 @@ class KgsGtp:
         # Pick the most recent game from queue
         filename = max(glob.iglob("%s/*.sgf" % (self.queued_sgfs_dir)), key=os.path.getmtime)
         filename = re.sub(".*/", "", filename)  # strip path and use just base filename
-        print "picked %s" % (filename)
+        print("picked %s" % (filename))
         self.parseSgf(filename)
 
     #
@@ -200,7 +200,7 @@ class KgsGtp:
                 (color, move) = m.groups()
                 move = self.sgf2human(move)
                 self.moves.append((color, move))
-                print "%s %s " % (color, move),
+                print("%s %s " % (color, move), end="")
         fh.close()
 
 def main():
