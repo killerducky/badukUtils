@@ -13,9 +13,12 @@ class Eval:
         self.leelaz_path = leelaz_path
         self.weights  = weights
         self.playouts = playouts
-        self.leelaz_cmd = "%s -d -w /home/aolsen/networks/%s.txt -p %d --noponder -r 0" % (self.leelaz_path, self.weights, self.playouts)
+        self.leelaz_cmd = "%s" % (self.leelaz_path)
+        self.leelaz_cmd += " -w /home/aolsen/networks/%s.txt" % (self.weights)
+        self.leelaz_cmd += " -p %d --noponder" % (self.playouts)
+        self.leelaz_cmd += " -d -r 0"       # no dumbpass, no resign
+        self.leelaz_cmd += " --seed 0 -t 1"  # reproduceable
         #self.leelaz_cmd += " -n -m 30"   # noise, more random first 30 moves
-        self.leelaz_cmd += " -t 1"   # single thread
         self.leela = subprocess.Popen(self.leelaz_cmd.split(), stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
         while 1:
             self.leela.stdout.flush()
@@ -57,7 +60,6 @@ class Eval:
                 if re.search("^White time", line): break
         self.fh.close()
         self.leela.kill()
-    
 
 def main():
     leelaz_paths = {}
@@ -67,19 +69,31 @@ def main():
     leelaz_paths["next"]   = "/home/aolsen/projects/leela-zero-next/leela-zero/src/leelaz"
     positions = []
     #positions.append(("opening.sgf", 1))
-    positions.append(("early_pass.sgf", 4))
-    #positions.append(("cap2.sgf", 612)
+    #positions.append(("early_pass.sgf", 4))
+    #positions.append(("cap2.sgf", 612))
     #positions.append(("not_suicide.sgf", 430))   # White T1, black kills
     #positions.append(("kill.sgf", 351))   # White T1, black kills
     #positions.append(("fill_2nd_eye.sgf", 412))
     #positions.append(("cap_to_connect_tail.sgf", 422))
+    #positions.append(("test_suicide.sgf", 282))  # black dead group many liberties
+    #positions.append(("test_suicide.sgf", 304))  # black dead group 2 liberties
+    #positions.append(("test_suicide.sgf", 306))  # black dead group 1 liberties
+    #positions.append(("test_suicide.sgf", 326))  # no dame left
+    #positions.append(("test_suicide.sgf", 342))  # white only 2 eyes
+    #positions.append(("test_suicide.sgf", 343))  # white only 1 eye, black to kill
 
-    for label in ("default", "cpuct"):
+    positions.append(("test_suicide2.sgf", 256))  # black dead group many liberties
+    positions.append(("test_suicide2.sgf", 274))  # black dead group 2 liberties
+    positions.append(("test_suicide2.sgf", 276))  # black dead group 1 liberties
+    positions.append(("test_suicide2.sgf", 316))  # white only 2 eyes
+    positions.append(("test_suicide2.sgf", 317))  # white only 1 eye, black to kill
+
+    for label in ["next"]:
         #for weights in ("0k", "9k", "19k", "62k", "292k"):
         #for weights in ("137k", "human_best_v1"):
-        for weights in ("585k",):
-            #for playouts in (50, 100, 360, 500, 625, 1000, 1600, 5000, 10000):
-            for playouts in (1000,):
+        for weights in ["890k"]:
+            #for playouts in [50, 100, 360, 500, 625, 1000, 1600, 5000, 10000]:
+            for playouts in [1600]:
                 for (position, movenum) in (positions):
                     eval = Eval(label, leelaz_paths[label], weights, playouts)
                     eval.evalposition(position, movenum)
