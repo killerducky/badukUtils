@@ -56,14 +56,12 @@ class KgsGtp:
         #if (cfgfile == "LeelaZeroA.cfg"):
         #    self.responses["list_commands"].append("kgs-chat")
         self.responses["name"] = "LeelaZero -- This robot relays Leela Zero self play games to KGS. See my info or http://zero.sjeng.org"
-        self.responses["version"] = "0.8"
+        self.responses["version"] = ""
         # Throw these away
         self.responses["boardsize"] = ""
         self.responses["kgs-time_settings"] = ""
-        self.responses["boardsize"] = ""
         self.responses["clear_board"] = ""
         self.responses["komi"] = ""
-        self.responses["kgs-time_settings"] = ""
         self.responses["play"] = ""
         self.responses["time_left"] = ""
         self.moves = []
@@ -113,7 +111,6 @@ class KgsGtp:
         os.utime(newfullname, (stat.st_atime, stat.st_mtime))
 
     def game_over(self):
-        time.sleep(self.kgs_game_over_sleep)
         if self.mycolor == "B":
             self.move_and_preserve_ts(self.queued_sgfs_dir, self.relayed_sgfs_dir, self.filename)
             # Having a separate queue directory from autogtp prevents Black and White from picking a different game
@@ -122,6 +119,7 @@ class KgsGtp:
                 self.move_and_preserve_ts(self.auto_sgfs_dir, self.queued_sgfs_dir, filename)
         self.moves = []
         self.movenum = 0
+        time.sleep(self.kgs_game_over_sleep)
 
     def moveSleep(self):
         # Start speeding up halfway through the max = 361 moves
@@ -146,7 +144,7 @@ class KgsGtp:
                 self.game_over()
                 self.send2kgsGtp("=\n")
             elif cmdarray[0] == "kgs-chat":
-                self.send2kgsGtp("= Testing kgs-chat command\n")
+                self.send2kgsGtp("= %s\n" % (self.responses["version"]))
             elif cmdarray[0] in self.responses.keys():
                 response = self.responses[cmdarray[0]]
                 self.send2kgsGtp("= ")
