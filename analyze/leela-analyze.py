@@ -65,7 +65,7 @@ def main():
     leelaz_paths = {}
     leelaz_paths["default"] = "/home/aolsen/projects/leela-zero-utils/leela-zero/src/leelaz"
     leelaz_paths["cpuct"]   = "/home/aolsen/projects/test_first_move_and_puct/leela-zero/src/leelaz"
-    leelaz_paths["resign"]   = "/home/aolsen/projects/test_resign/leela-zero/src/leelaz"
+    leelaz_paths["resign"]   = "/home/aolsen/projects/leela-zero-resign/leela-zero/src/leelaz"
     leelaz_paths["next"]   = "/home/aolsen/projects/leela-zero-next/leela-zero/src/leelaz"
     positions = []
     #positions.append(("opening.sgf", 1))
@@ -81,14 +81,13 @@ def main():
     #positions.append(("test_suicide.sgf", 326))  # no dame left
     #positions.append(("test_suicide.sgf", 342))  # white only 2 eyes
     #positions.append(("test_suicide.sgf", 343))  # white only 1 eye, black to kill
-
-    positions.append(("test_suicide2.sgf", 256))  # black dead group many liberties
-    positions.append(("test_suicide2.sgf", 274))  # black dead group 2 liberties
-    positions.append(("test_suicide2.sgf", 276))  # black dead group 1 liberties
-    positions.append(("test_suicide2.sgf", 316))  # white only 2 eyes
+    #positions.append(("test_suicide2.sgf", 256))  # black dead group many liberties
+    #positions.append(("test_suicide2.sgf", 274))  # black dead group 2 liberties
+    #positions.append(("test_suicide2.sgf", 276))  # black dead group 1 liberties
+    #positions.append(("test_suicide2.sgf", 316))  # white only 2 eyes
+    #positions.append(("test_suicide2.sgf", 317))  # white only 1 eye, black to kill
     positions.append(("test_suicide2.sgf", 317))  # white only 1 eye, black to kill
-
-    for label in ["next"]:
+    for label in ["resign"]:
         #for weights in ("0k", "9k", "19k", "62k", "292k"):
         #for weights in ("137k", "human_best_v1"):
         for weights in ["890k"]:

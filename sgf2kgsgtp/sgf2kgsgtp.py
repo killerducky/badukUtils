@@ -53,12 +53,12 @@ class KgsGtp:
             #"kgs-chat",
             "heatmap"
         ]
-        #if (cfgfile == "LeelaZeroA.cfg"):
+        # computer-go mailing list said kgs-chat is broken.
+        #if (self.cfgfile == "LeelaZeroA.cfg"):
         #    self.responses["list_commands"].append("kgs-chat")
         self.responses["name"] = "LeelaZero -- This robot relays Leela Zero self play games to KGS. See my info or http://zero.sjeng.org"
         self.responses["version"] = ""
         # Throw these away
-        self.responses["boardsize"] = ""
         self.responses["kgs-time_settings"] = ""
         self.responses["clear_board"] = ""
         self.responses["komi"] = ""
@@ -85,8 +85,6 @@ class KgsGtp:
     def getNextMove(self, mycolor):
         self.moveSleep()
         self.mycolor = mycolor
-        if len(self.moves)==0:
-            self.parseNextSgf()
         print("getNextMove %s self.movenum=%d len(self.moves)=%d" % (self.mycolor, self.movenum, len(self.moves)))
         if self.movenum >= len(self.moves):
             print("out of moves, resign. self.winner=%s self.score=%s self.mycolor=%s\n" % (self.winner, self.score, self.mycolor))
@@ -137,6 +135,11 @@ class KgsGtp:
             if cmdarray[0] == "genmove":
                 move = self.getNextMove(cmdarray[1].upper())
                 self.send2kgsGtp("= %s\n" % (move))
+            elif cmdarray[0] == "boardsize":
+                if len(self.moves)==0:
+                    self.parseNextSgf()
+                    continue
+                self.send2kgsGtp("=\n")
             elif cmdarray[0] == "final_status_list":
                 time.sleep(self.final_status_list_sleep)
                 self.send2kgsGtp("=\n")
@@ -171,6 +174,8 @@ class KgsGtp:
         filename = re.sub(".*/", "", filename)  # strip path and use just base filename
         print("picked %s" % (filename))
         self.parseSgf(filename)
+        self.kgsGtpProc.kill()
+        self.kgsGtpProc = subprocess.Popen(self.kgsGtpCmd.split(), stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, universal_newlines=True, bufsize=1)
 
     #
     # Example sgf:
