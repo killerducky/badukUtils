@@ -11,8 +11,8 @@ from bs4 import BeautifulSoup
 
 best_networks = {}
 
-#fh = urllib.urlopen("http://zero.sjeng.org")
-fh = open("index.html")
+fh = urllib.urlopen("http://zero-test.sjeng.org")
+#fh = open("index.html")
 soup = BeautifulSoup(fh.read(), "html.parser")
 for table in soup.find_all(lambda tag: tag.name == "table" and "networks-table" in tag["class"]):
     for row in table.find_all("tr"):
@@ -23,6 +23,7 @@ for table in soup.find_all(lambda tag: tag.name == "table" and "networks-table" 
         prior_games = int(prior_games.string)
         best_networks[network.string] = {}
         best_networks[network.string]["prior_games"] = prior_games
+        best_networks[network.string]["date"] = date.string
 
 for table in soup.find_all(lambda tag: tag.name == "table" and "matches-table" in tag["class"]):
     for row in table.find_all("tr"):
@@ -41,7 +42,7 @@ for table in soup.find_all(lambda tag: tag.name == "table" and "matches-table" i
 for k in sorted(best_networks.keys(), key=lambda x: best_networks[x]["prior_games"]):
     v = best_networks[k]
     if "wins" in v:
-        print ", ".join(map(str, [k, v["prev_net"], v["prior_games"], v["wins"], v["losses"]]))
+        print ", ".join(map(str, [k, v["prev_net"], v["date"], v["prior_games"], v["wins"], v["losses"]]))
             
 
 
