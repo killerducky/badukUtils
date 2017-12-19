@@ -194,8 +194,12 @@ class KgsGtp:
         fh = open("%s/%s" % (self.queued_sgfs_dir, self.filename), "r")
         line = fh.readline()
         # KGS only asks for version once...
-        m = re.search("PB\[Leela Zero (.*?)\].*RE\[(.)\+(\S+)?\]", line)
-        (self.responses["version"], self.winner, self.score) = m.groups()
+        m = re.search("PB\[Leela Zero (.*?)\]PW\[Leela Zero (.*?)\].*RE\[(.)\+(\S+)?\]", line)
+        (pw, pb, self.winner, self.score) = m.groups()
+        if pw == pb:
+            self.responses["version"] = pw
+        else:
+            self.responses["version"] = "Test Match White: %s, Black %s" % (pw, pb)
         for line in fh:
             for move in line.split(";"):
                 m = re.search("([BW])\[(..)\]", move)
