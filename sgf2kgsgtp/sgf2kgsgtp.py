@@ -56,7 +56,10 @@ class KgsGtp:
         # computer-go mailing list said kgs-chat is broken.
         #if (self.cfgfile == "LeelaZeroA.cfg"):
         #    self.responses["list_commands"].append("kgs-chat")
-        self.responses["name"] = "LeelaZero -- This robot relays Leela Zero self play games to KGS. See my info or http://zero.sjeng.org"
+        if (self.cfgfile == "LeelaZeroA.cfg"):
+            self.responses["name"] = "LeelaZero -- This robot relays Leela Zero self play games to KGS. See my info or http://zero.sjeng.org"
+        else:
+            self.responses["name"] = ""
         self.responses["version"] = ""
         # Throw these away
         self.responses["kgs-time_settings"] = ""
@@ -193,13 +196,13 @@ class KgsGtp:
         self.filename = filename
         fh = open("%s/%s" % (self.queued_sgfs_dir, self.filename), "r")
         line = fh.readline()
-        # KGS only asks for version once...
         m = re.search("PB\[Leela Zero (.*?)\]PW\[Leela Zero (.*?)\].*RE\[(.)\+(\S+)?\]", line)
         (pw, pb, self.winner, self.score) = m.groups()
-        if pw == pb:
-            self.responses["version"] = pw
-        else:
-            self.responses["version"] = "Test Match White: %s, Black %s" % (pw, pb)
+        if (self.cfgfile == "LeelaZeroA.cfg"):
+            if pw == pb:
+                self.responses["version"] = pw
+            else:
+                self.responses["version"] = "Test Match White: %s, Black %s" % (pw, pb)
         for line in fh:
             for move in line.split(";"):
                 m = re.search("([BW])\[(..)\]", move)
