@@ -41,7 +41,7 @@ for filename in sorted(files):
             dayBins[day] = stats
         #print day, dayBins[day]
 
-for day, stats in dayBins.iteritems():
+for day, stats in sorted(dayBins.iteritems()):
     count = stats[0]
     stats = stats[1:]
     stats = map(lambda x: x/count, stats)
