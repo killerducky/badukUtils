@@ -197,7 +197,7 @@ class KgsGtp:
         fh = open("%s/%s" % (self.queued_sgfs_dir, self.filename), "r")
         line = fh.readline()
         m = re.search("PB\[Leela Zero (.*?)\]PW\[Leela Zero (.*?)\].*RE\[(.)\+(\S+)?\]", line)
-        (pw, pb, self.winner, self.score) = m.groups()
+        (pb, pw, self.winner, self.score) = m.groups()
         if (self.cfgfile == "LeelaZeroA.cfg"):
             if pw == pb:
                 self.responses["version"] = pw
