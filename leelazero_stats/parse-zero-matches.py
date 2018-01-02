@@ -30,7 +30,9 @@ for table in soup.find_all(lambda tag: tag.name == "table" and "matches-table" i
         data = row.find_all("td")
         if not data: continue
         date, networks, record, games, sprt = data
-        next_net, vs, prev_net = networks.find_all()
+        net_elements = networks.find_all()
+        next_net = net_elements[1]
+        prev_net = net_elements[5]
         wins, losses = re.search("(\d+) : (\d+)", record.contents[0]).groups()
         wins = int(wins)
         losses = int(losses)
@@ -42,7 +44,8 @@ for table in soup.find_all(lambda tag: tag.name == "table" and "matches-table" i
 for k in sorted(best_networks.keys(), key=lambda x: best_networks[x]["prior_games"]):
     v = best_networks[k]
     if "wins" in v:
-        print ", ".join(map(str, [k, v["prev_net"], v["date"], v["prior_games"], v["wins"], v["losses"]]))
+        items = [k, "5", "64", "", v["prior_games"], v["wins"], v["losses"]] + [""]*7 + [v["date"]]
+        print ", ".join(map(str, items))
             
 
 
