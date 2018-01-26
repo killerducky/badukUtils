@@ -41,10 +41,10 @@ for table in soup.find_all(lambda tag: tag.name == "table" and "matches-table" i
             best_networks[next_net.string]["wins"] = wins
             best_networks[next_net.string]["losses"] = losses
 
-for k in sorted(best_networks.keys(), key=lambda x: best_networks[x]["prior_games"]):
+for k in sorted(best_networks.keys(), key=lambda x: (best_networks[x]["prior_games"], best_networks[x]["date"])):
     v = best_networks[k]
     if "wins" in v:
-        items = [k, "5", "64", "", v["prior_games"], v["wins"], v["losses"]] + [""]*7 + [v["date"]]
+        items = [k, "6", "128", "", v["prior_games"], v["wins"], v["losses"]] + [""]*8 + [v["date"]]
         print ", ".join(map(str, items))
             
 
