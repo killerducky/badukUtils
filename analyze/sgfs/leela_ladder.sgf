@@ -1,0 +1,13 @@
+(;GM[1]FF[4]RU[Chinese]DT[2018-01-01]SZ[19]KM[7.5]PB[Leela Zero 0.9 58da6176]PW[Leela Zero 0.9 58da6176]RE[W+Resign]
+C[Leela Zero options: -p 1600 -r 1 -m 30 -t 1 -d -n --noponder -s 10151684195287044872 -g -q -w 58da61769a5fb12ff555ee927f16b50d4c24de73a1170a85df1b0d2d706bdef3]
+
+;B[dp];W[de];B[pp];W[pd];B[od];W[pe];B[pc];W[qc];B[qb];W[pb]
+;B[oc];W[rb];B[dd];W[cd];B[cc];W[oo];B[ce];W[bd];B[be];W[df]
+;B[cg];W[dc];B[ed];W[ec];B[bc];W[fd];B[ee];W[ef];B[fe];W[ge]
+;B[ff];W[fg];B[gf];W[hf];B[gg];W[gh];B[hg];W[ig];B[hh];W[hi]
+;B[ih];W[jh];B[ii];W[ij];B[ji];W[ki];B[jj];W[jk];B[kj];W[lj]
+;B[kk];W[kl];B[lk];W[mk];B[ll];W[lm];B[ml];W[nl];B[mm];W[mn]
+;B[nm];W[om];B[nn];W[no];B[ad];W[on];B[qd];W[rc];B[oe];W[cd]
+;B[pf];W[qe];B[qf];W[re];B[rf];W[of];B[lc];W[og];B[qh];W[ob]
+;B[nb];W[nc];B[nd];W[mc];B[md];W[mb];B[lb];W[na];B[ld];W[cq]
+;B[dq];W[cp])
