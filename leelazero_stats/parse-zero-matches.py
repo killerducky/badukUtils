@@ -11,14 +11,14 @@ from bs4 import BeautifulSoup
 
 best_networks = {}
 
-fh = urllib.urlopen("http://zero-test.sjeng.org")
+fh = urllib.urlopen("http://zero.sjeng.org")
 #fh = open("index.html")
 soup = BeautifulSoup(fh.read(), "html.parser")
 for table in soup.find_all(lambda tag: tag.name == "table" and "networks-table" in tag["class"]):
     for row in table.find_all("tr"):
         data = row.find_all("td")
         if not data: continue
-        date, network, games, prior_games = data
+        num, date, network, games, prior_games = data
         games = int(games.string)
         prior_games = int(prior_games.string)
         best_networks[network.string] = {}
@@ -44,7 +44,7 @@ for table in soup.find_all(lambda tag: tag.name == "table" and "matches-table" i
 for k in sorted(best_networks.keys(), key=lambda x: (best_networks[x]["prior_games"], best_networks[x]["date"])):
     v = best_networks[k]
     if "wins" in v:
-        items = [k, "6", "128", "", v["prior_games"], v["wins"], v["losses"]] + [""]*8 + [v["date"]]
+        items = [k, "6", "128", "", v["prior_games"], v["wins"], v["losses"]] + [""]*7 + [v["date"]]
         print ", ".join(map(str, items))
             
 
