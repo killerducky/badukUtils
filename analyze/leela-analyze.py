@@ -7,72 +7,55 @@ import subprocess
 import time
 import re
 
+
 class Eval:
-    def __init__(self, label, leelaz_path, weights, playouts):
+    def __init__(self, label, leelaz_path, weights, playouts_arg, playouts, sgffile, movenum, args = ""):
+        weights_path = "/home/aolsen/networks"
         self.label = label
         self.leelaz_path = leelaz_path
         self.weights  = weights
+        self.playouts_arg = playouts_arg
         self.playouts = playouts
-        self.leelaz_cmd = "%s" % (self.leelaz_path)
-        self.leelaz_cmd += " -w /home/aolsen/networks/%s.txt" % (self.weights)
-        self.leelaz_cmd += " -p %d --noponder" % (self.playouts)
-        self.leelaz_cmd += " -d -r 0"       # no dumbpass, no resign
-        self.leelaz_cmd += " --seed 0 -t 1"  # reproduceable
-        #self.leelaz_cmd += " -n -m 30"   # noise, more random first 30 moves
-        self.leela = subprocess.Popen(self.leelaz_cmd.split(), stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
-        while 1:
-            self.leela.stdout.flush()
-            line = self.leela.stdout.readline()
-            print line,
-            if re.search("^White time", line): break
+        self.args = args
+        self.sgffile = sgffile
+        self.movenum = movenum
+
+        self.logfile = "logs/%s-%s-%d-%s-%d.log" % (label, playouts_arg, playouts, sgffile, movenum)
+        if os.path.isfile(self.logfile):
+            os.remove(self.logfile)
+        self.pcmd = "%s -g -d -t 1 -r 1 -w %s/%s -%s %d --noponder %s -l %s" % (
+            self.leelaz_path, weights_path, self.weights, self.playouts_arg, self.playouts, self.args, self.logfile)
 
     def colortomove(self, movenum):
         if movenum%2: return "b"
         return "w"
 
-    def sendcmd(self, cmd):
-        self.leela.stdin.write(cmd+"\n")
-        self.log("cmd: %s\n" % (cmd))
-        self.cmds.append(cmd)
-
-    def log(self, line):
-        self.fh.write(line)
-        print line,
-
     def evalposition(self, sgffile, movenum):
-        self.cmds = []
-        self.fh = open("logs/evallog_%s_%d_%s_%s_%05d.txt" % (sgffile, movenum, self.label, self.weights, self.playouts), "w")
-        self.log("leelaz_cmd=%s\n" % (self.leelaz_cmd))
-        self.log("evalposition %s %d\n" % (sgffile, movenum))
-        self.sendcmd("loadsgf sgfs/%s %d" % (sgffile, movenum))
-        self.sendcmd("heatmap")
-        self.sendcmd("genmove %s" % (self.colortomove(movenum)))
-        self.sendcmd("heatmap")
-        self.sendcmd("dump_training w test_training")
-        for cmd in self.cmds:
-            self.log("\n\ncmd=%s\n" % (cmd))
-            while 1:
-                self.leela.stdout.flush()
-                line = self.leela.stdout.readline()
-                if re.search("^Leela: ", line):
-                    line = re.sub("^Leela: ", "Leela:\n", line)
-                self.log(line)
-                if re.search("^White time", line): break
-        self.fh.close()
-        self.leela.kill()
+        print(self.pcmd.split())
+        #self.leela = subprocess.Popen(self.pcmd.split(), stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+        self.leela = subprocess.Popen(self.pcmd.split(), stdin = subprocess.PIPE)
+        self.leela.stdin.write("kgs-time_settings byoyomi 0 1 0\n")
+        self.leela.stdin.write("loadsgf sgfs/%s %d\n" % (sgffile, movenum))
+        self.leela.stdin.write("heatmap\n")
+        self.leela.stdin.write("genmove %s\n" % (self.colortomove(movenum)))
+        self.leela.stdin.write("heatmap\n")
+        self.leela.stdin.write("dump_training w test_training\n")
+
+    def quit(self):
+        self.leela.stdin.write("quit\n")
+        self.leela.wait()
+
 
 def main():
     leelaz_paths = {}
-    leelaz_paths["default"] = "/home/aolsen/projects/leela-zero-utils/leela-zero/src/leelaz"
-    leelaz_paths["cpuct"]   = "/home/aolsen/projects/test_first_move_and_puct/leela-zero/src/leelaz"
-    leelaz_paths["resign"]   = "/home/aolsen/projects/leela-zero-resign/leela-zero/src/leelaz"
-    leelaz_paths["next"]   = "/home/aolsen/projects/leela-zero-next/leela-zero/src/leelaz"
+    #leelaz_paths["default"] = "/home/aolsen/projects/lz-master/leela-zero/src/leelaz"
+    leelaz_paths["next"]   = "/home/aolsen/projects/lz-next/leela-zero/build/leelaz"
     positions = []
     #positions.append(("opening.sgf", 1))
     #positions.append(("early_pass.sgf", 4))
     #positions.append(("cap2.sgf", 612))
     #positions.append(("not_suicide.sgf", 430))   # White T1, black kills
-    #positions.append(("kill.sgf", 351))   # White T1, black kills
+    positions.append(("kill.sgf", 351))   # White T1, black kills
     #positions.append(("fill_2nd_eye.sgf", 412))
     #positions.append(("cap_to_connect_tail.sgf", 422))
     #positions.append(("test_suicide.sgf", 282))  # black dead group many liberties
@@ -87,14 +70,15 @@ def main():
     #positions.append(("test_suicide2.sgf", 316))  # white only 2 eyes
     #positions.append(("test_suicide2.sgf", 317))  # white only 1 eye, black to kill
     positions.append(("test_suicide2.sgf", 317))  # white only 1 eye, black to kill
-    for label in ["resign"]:
+    for lz in ["next"]:
         #for weights in ("0k", "9k", "19k", "62k", "292k"):
         #for weights in ("137k", "human_best_v1"):
-        for weights in ["890k"]:
+        for weights in ["890k.txt"]:
             #for playouts in [50, 100, 360, 500, 625, 1000, 1600, 5000, 10000]:
-            for playouts in [1600]:
+            for visits in [1600]:
                 for (position, movenum) in (positions):
-                    eval = Eval(label, leelaz_paths[label], weights, playouts)
+                    eval = Eval(lz, leelaz_paths[lz], weights, "v", visits, position, movenum)
                     eval.evalposition(position, movenum)
+                    eval.quit()
 
 if __name__ == "__main__": main()
